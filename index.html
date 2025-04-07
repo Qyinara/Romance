@@ -1,0 +1,347 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>ZEYNEB</title>
+<style>
+    body {
+        margin: 0;
+        overflow: hidden;
+        background: #0a0a1a;
+        font-family: 'Arial', sans-serif;
+    }
+    #passwordModal {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(255, 182, 193, 0.9);
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 0 20px rgba(255, 105, 180, 0.7);
+        z-index: 100;
+        text-align: center;
+    }
+    #passwordInput {
+        margin: 20px 0;
+        padding: 10px;
+        font-size: 18px;
+        width: 150px;
+        text-align: center;
+        border: 2px solid #ff69b4;
+        border-radius: 5px;
+    }
+    #submitPassword {
+        background: #ff69b4;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: all 0.3s;
+    }
+    #submitPassword:hover {
+        background: #ff1493;
+        transform: scale(1.05);
+    }
+    #message {
+        margin-top: 15px;
+        color: #d60d6c;
+        font-weight: bold;
+        min-height: 20px;
+    }
+    #musicControl {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: rgba(255, 105, 180, 0.7);
+        border: none;
+        color: white;
+        font-size: 20px;
+        cursor: pointer;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s;
+    }
+    #musicControl:hover {
+        background: rgba(255, 20, 147, 0.9);
+        transform: scale(1.1);
+    }
+    #volumeControl {
+        position: fixed;
+        bottom: 80px;
+        right: 20px;
+        width: 50px;
+        height: 120px;
+        background: rgba(255, 105, 180, 0.7);
+        border-radius: 25px;
+        padding: 10px 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: space-between;
+        z-index: 10;
+        transition: all 0.3s;
+    }
+    #volumeSlider {
+        -webkit-appearance: slider-vertical;
+        width: 20px;
+        height: 100px;
+        padding: 0 5px;
+    }
+    @keyframes shake {
+        0%, 100% { transform: translate(-50%, -50%); }
+        20%, 60% { transform: translate(-52%, -50%); }
+        40%, 80% { transform: translate(-48%, -50%); }
+    }
+</style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<div id="passwordModal">
+    <h2 style="color: #8b008b;">💖 Özel İçerik 💖</h2>
+    <p style="color: #4b0082;">Lütfen şifreyi girin:</p>
+    <input type="password" id="passwordInput" maxlength="4" placeholder="****">
+    <div id="message"></div>
+    <button id="submitPassword">Gönder</button>
+</div>
+<button id="musicControl">♪</button>
+<div id="volumeControl">
+    <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="0.5" orient="vertical">
+</div>
+<audio id="bgMusic" loop>
+    <source src="Yalın - Sonsuz Ol.mp3" type="audio/mpeg">
+    Tarayıcınız audio elementini desteklemiyor.
+</audio>
+
+<script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    let canvasW = canvas.width = window.innerWidth;
+    let canvasH = canvas.height = window.innerHeight;
+    let canvasWHalf = canvasW / 2;
+    let canvasHHalf = canvasH / 2;
+
+    let stars = [], particles = [], heartPath = new Path2D();
+    const maxStars = 200, maxParticles = 100;
+
+    const colors = ['#ffb6c1', '#ff69b4', '#db7093', '#ff1493', '#ffc0cb', '#d8bfd8', '#dda0dd', '#ee82ee'];
+
+    // Müzik kontrolü
+    const bgMusic = document.getElementById('bgMusic');
+    const musicControl = document.getElementById('musicControl');
+    const volumeControl = document.getElementById('volumeControl');
+    const volumeSlider = document.getElementById('volumeSlider');
+    let isMusicPlaying = false;
+
+    // Sayfa yüklendiğinde müziği başlat (volume orta seviyede)
+    window.addEventListener('load', function() {
+        bgMusic.volume = 0.5;
+        bgMusic.play()
+            .then(() => {
+                musicControl.textContent = '♪';
+                isMusicPlaying = true;
+            })
+            .catch(error => {
+                console.log("Otomatik oynatma engellendi:", error);
+                musicControl.textContent = '🔇';
+            });
+    });
+
+    // Müzik kontrol butonu
+    musicControl.addEventListener('click', function() {
+        if (isMusicPlaying) {
+            bgMusic.pause();
+            musicControl.textContent = '🔇';
+        } else {
+            bgMusic.play()
+                .then(() => {
+                    musicControl.textContent = '♪';
+                })
+                .catch(error => {
+                    console.log("Müzik çalma hatası:", error);
+                    alert("Müzik çalınamadı. Lütfen sayfayı tıklayarak etkileşimde bulunun ve tekrar deneyin.");
+                });
+        }
+        isMusicPlaying = !isMusicPlaying;
+    });
+
+    // Ses seviyesi kontrolü
+    volumeSlider.addEventListener('input', function() {
+        bgMusic.volume = this.value;
+    });
+
+    // Sayfaya tıklanınca müziği başlat (tarayıcı kısıtlamalarını aşmak için)
+    document.addEventListener('click', function() {
+        if (!isMusicPlaying) {
+            bgMusic.play()
+                .then(() => {
+                    musicControl.textContent = '♪';
+                    isMusicPlaying = true;
+                })
+                .catch(error => {
+                    console.log("Müzik çalma hatası:", error);
+                });
+        }
+    });
+
+    function random(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function Star() {
+        this.x = random(0, canvasW);
+        this.y = random(0, canvasH);
+        this.size = random(1, 3);
+        this.blinkSpeed = random(5, 10);
+        this.opacity = 0;
+        this.increasing = true;
+    }
+
+    Star.prototype.update = function () {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        this.opacity += this.increasing ? 0.01 * this.blinkSpeed : -0.01 * this.blinkSpeed;
+        if (this.opacity >= 0.8) this.increasing = false;
+        if (this.opacity <= 0.2) this.increasing = true;
+        ctx.fillStyle = 'rgba(255, 255, 255, ' + this.opacity + ')';
+        ctx.fill();
+    };
+
+    function Particle() {
+        this.x = random(0, canvasW);
+        this.y = random(0, canvasH);
+        this.size = random(2, 5);
+        this.speedX = random(-1, 1);
+        this.speedY = random(1, 3);
+        this.color = colors[random(0, colors.length - 1)];
+        this.life = 100;
+        this.decay = random(1, 3);
+    }
+
+    Particle.prototype.update = function () {
+        this.x += this.speedX;
+        this.y += this.speedY;
+        this.life -= this.decay;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fillStyle = this.color;
+        ctx.globalAlpha = this.life / 100;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+    };
+
+    function createHeartPath() {
+        heartPath = new Path2D();
+        heartPath.moveTo(canvasWHalf, canvasHHalf - 50);
+        heartPath.bezierCurveTo(canvasWHalf - 100, canvasHHalf - 150, canvasWHalf - 200, canvasHHalf - 50, canvasWHalf, canvasHHalf + 100);
+        heartPath.moveTo(canvasWHalf, canvasHHalf - 50);
+        heartPath.bezierCurveTo(canvasWHalf + 100, canvasHHalf - 150, canvasWHalf + 200, canvasHHalf - 50, canvasWHalf, canvasHHalf + 100);
+    }
+
+    function draw() {
+        ctx.fillStyle = 'rgba(10, 10, 26, 0.2)';
+        ctx.fillRect(0, 0, canvasW, canvasH);
+
+        stars.forEach(star => star.update());
+
+        particles.forEach((p, i) => {
+            p.update();
+            if (p.life <= 0) particles.splice(i, 1);
+        });
+
+        // Kalp çizimi
+        ctx.fillStyle = 'rgba(255, 105, 180, 0.3)';
+        ctx.fill(heartPath);
+        ctx.strokeStyle = 'rgba(255, 105, 180, 0.8)';
+        ctx.lineWidth = 2;
+        ctx.stroke(heartPath);
+
+        ctx.font = 'italic bold 72px "Brush Script MT", cursive';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.shadowColor = 'rgba(255, 182, 193, 0.7)';
+        ctx.shadowBlur = 15;
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+        ctx.fillText('Z E Y N E B', canvasWHalf, canvasHHalf);
+        ctx.shadowBlur = 0;
+    }
+
+    for (let i = 0; i < maxStars; i++) stars.push(new Star());
+
+    createHeartPath();
+
+    canvas.addEventListener('click', function (e) {
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        if (ctx.isPointInPath(heartPath, x, y)) {
+            document.getElementById('passwordModal').style.display = 'block';
+
+            for (let i = 0; i < 30 && particles.length < maxParticles; i++) {
+                let p = new Particle();
+                p.x = x + random(-20, 20);
+                p.y = y + random(-20, 20);
+                p.size = random(3, 6);
+                p.speedX = random(-2, 2);
+                p.speedY = random(-3, -5);
+                p.color = '#ff69b4';
+                particles.push(p);
+            }
+        }
+    });
+
+    document.getElementById('submitPassword').addEventListener('click', checkPassword);
+    document.getElementById('passwordInput').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') checkPassword();
+    });
+
+    function checkPassword() {
+        const password = document.getElementById('passwordInput').value;
+        const message = document.getElementById('message');
+
+        if (password === '1507') {
+            message.textContent = 'Şifre doğru! Yönlendiriliyor...';
+            message.style.color = 'green';
+            document.getElementById('passwordModal').style.background = 'rgba(144, 238, 144, 0.9)';
+            document.getElementById('submitPassword').style.background = '#4CAF50';
+            setTimeout(() => {
+                window.location.href = 'secretpage.html';
+            }, 2000);
+        } else {
+            message.textContent = 'Şifre yanlış! Tekrar deneyin.';
+            message.style.color = '#d60d6c';
+            document.getElementById('passwordModal').style.animation = 'shake 0.5s';
+            setTimeout(() => {
+                document.getElementById('passwordModal').style.animation = '';
+            }, 500);
+        }
+    }
+
+    function animate() {
+        draw();
+        if (Math.random() < 0.3 && particles.length < maxParticles)
+            particles.push(new Particle());
+        requestAnimationFrame(animate);
+    }
+
+    animate();
+
+    window.addEventListener('resize', function () {
+        canvasW = canvas.width = window.innerWidth;
+        canvasH = canvas.height = window.innerHeight;
+        canvasWHalf = canvasW / 2;
+        canvasHHalf = canvasH / 2;
+        createHeartPath();
+    });
+</script>
+</body>
+</html>
