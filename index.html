@@ -134,14 +134,14 @@
 
     const colors = ['#ffb6c1', '#ff69b4', '#db7093', '#ff1493', '#ffc0cb', '#d8bfd8', '#dda0dd', '#ee82ee'];
 
-    // Müzik kontrolü
+
     const bgMusic = document.getElementById('bgMusic');
     const musicControl = document.getElementById('musicControl');
     const volumeControl = document.getElementById('volumeControl');
     const volumeSlider = document.getElementById('volumeSlider');
     let isMusicPlaying = false;
 
-    // Sayfa yüklendiğinde müziği başlat (volume orta seviyede)
+
     window.addEventListener('load', function() {
         bgMusic.volume = 0.5;
         bgMusic.play()
@@ -155,7 +155,7 @@
             });
     });
 
-    // Müzik kontrol butonu
+
     musicControl.addEventListener('click', function() {
         if (isMusicPlaying) {
             bgMusic.pause();
@@ -172,13 +172,10 @@
         }
         isMusicPlaying = !isMusicPlaying;
     });
-
-    // Ses seviyesi kontrolü
-    volumeSlider.addEventListener('input', function() {
+', function() {
         bgMusic.volume = this.value;
     });
 
-    // Sayfaya tıklanınca müziği başlat (tarayıcı kısıtlamalarını aşmak için)
     document.addEventListener('click', function() {
         if (!isMusicPlaying) {
             bgMusic.play()
@@ -257,7 +254,7 @@
             if (p.life <= 0) particles.splice(i, 1);
         });
 
-        // Kalp çizimi
+  
         ctx.fillStyle = 'rgba(255, 105, 180, 0.3)';
         ctx.fill(heartPath);
         ctx.strokeStyle = 'rgba(255, 105, 180, 0.8)';
